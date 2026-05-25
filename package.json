@@ -40,13 +40,14 @@
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
     "jsdom": "^25.0.1",
+    "lucide-react": "^0.468.0",
+    "puppeteer-core": "^25.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "supertest": "^7.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
-    "vitest": "^2.1.8",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "lucide-react": "^0.468.0"
+    "vitest": "^2.1.8"
   }
 }
