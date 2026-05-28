@@ -18,6 +18,8 @@ yarn-debug.log*
 Thumbs.db
 coverage/
 .nyc_output/
+server.log
+server/public/uploads/
 .devin/
 .claude/
 .mcp.json

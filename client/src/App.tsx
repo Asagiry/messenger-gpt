@@ -3,6 +3,7 @@ import { CheckCheck, ChevronLeft, Edit3, LogOut, MessageCircle, Search, Send, Se
 import type { Socket } from "socket.io-client";
 import { api, getStoredToken, storeToken } from "./api";
 import { createSocket } from "./socket";
+import { decodeConversationExport, encodeConversationExport } from "./historyExport";
 import type { Dialog, Message, User } from "./types";
 
 type AuthMode = "login" | "register";
@@ -51,6 +52,9 @@ export default function App() {
   const [me, setMe] = useState<User | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authError, setAuthError] = useState("");
+  const [recoveryOpen, setRecoveryOpen] = useState(false);
+  const [recoveryToken, setRecoveryToken] = useState("");
+  const [recoveryStatus, setRecoveryStatus] = useState("");
   const [dialogs, setDialogs] = useState<Dialog[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
@@ -59,6 +63,9 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState<Message | null>(null);
+  const [historyExport, setHistoryExport] = useState("");
+  const [historyImport, setHistoryImport] = useState("");
+  const [historyStatus, setHistoryStatus] = useState("");
   const [typingUser, setTypingUser] = useState<number | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -171,6 +178,27 @@ export default function App() {
     }
   }
 
+  async function requestRecovery(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRecoveryStatus("");
+    const data = new FormData(event.currentTarget);
+    const result = await api.requestPasswordRecovery({ email: String(data.get("recoveryEmail")) });
+    setRecoveryToken(result.recoveryToken ?? "");
+    setRecoveryStatus(result.recoveryToken ? "Recovery token generated. Use it below to set a new password." : "If the email exists, a recovery token was generated.");
+  }
+
+  async function resetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRecoveryStatus("");
+    const data = new FormData(event.currentTarget);
+    await api.resetPassword({
+      token: String(data.get("recoveryToken")),
+      password: String(data.get("newPassword"))
+    });
+    setRecoveryToken("");
+    setRecoveryStatus("Password updated. You can log in with the new password.");
+  }
+
   async function sendMessage(event: FormEvent) {
     event.preventDefault();
     if (!activePeerId || !draft.trim()) return;
@@ -213,6 +241,22 @@ export default function App() {
     setProfileOpen(false);
   }
 
+  function exportActiveConversation() {
+    if (!activePeerId) return;
+    setHistoryExport(encodeConversationExport({ peerId: activePeerId, messages }));
+    setHistoryStatus("Conversation exported.");
+  }
+
+  function importConversation() {
+    try {
+      const imported = decodeConversationExport(historyImport);
+      setMessages(imported.messages);
+      setHistoryStatus("Imported conversation is displayed locally. It was not written to the server.");
+    } catch {
+      setHistoryStatus("Invalid conversation export string.");
+    }
+  }
+
   const filteredDialogs = useMemo(() => {
     return dialogs.filter((dialog) => {
       if (filter === "unread") return dialog.unreadCount > 0;
@@ -242,6 +286,24 @@ export default function App() {
           <button className="link-button" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
             {authMode === "login" ? "Create account" : "I already have an account"}
           </button>
+          <button className="link-button" onClick={() => setRecoveryOpen((value) => !value)}>
+            Forgot password?
+          </button>
+          {recoveryOpen && (
+            <section className="recovery-panel">
+              <form onSubmit={requestRecovery}>
+                <input name="recoveryEmail" type="email" aria-label="Recovery email" autoComplete="email" placeholder="Account email" required />
+                <button type="submit">Get recovery token</button>
+              </form>
+              <form onSubmit={resetPassword}>
+                <input name="recoveryToken" aria-label="Recovery token" autoComplete="off" placeholder="Recovery token" defaultValue={recoveryToken} required />
+                <input name="newPassword" type="password" aria-label="New password" autoComplete="new-password" placeholder="New password" required minLength={6} />
+                <button type="submit">Reset password</button>
+              </form>
+              {recoveryStatus && <p>{recoveryStatus}</p>}
+              {recoveryToken && <code>{recoveryToken}</code>}
+            </section>
+          )}
         </section>
       </main>
     );
@@ -354,20 +416,29 @@ export default function App() {
               })}
               <div ref={bottomRef} />
             </div>
-            <form className="composer" onSubmit={sendMessage}>
-              {editing && <span className="edit-chip">Editing <button type="button" aria-label="Cancel editing" onClick={() => { setEditing(null); setDraft(""); }}><X size={14} /></button></span>}
-              <input
-                value={draft}
-                aria-label="Message text"
-                autoComplete="off"
-                onChange={(event) => {
-                  setDraft(event.target.value);
-                  socketRef.current?.emit(event.target.value ? "typing:start" : "typing:stop", { peerId: activePeerId });
-                }}
-                placeholder="Write a message"
-              />
-              <button type="submit" title="Send" aria-label="Send message"><Send size={18} /></button>
-            </form>
+            <footer className="chat-bottom">
+              <form className="composer" onSubmit={sendMessage}>
+                {editing && <span className="edit-chip">Editing <button type="button" aria-label="Cancel editing" onClick={() => { setEditing(null); setDraft(""); }}><X size={14} /></button></span>}
+                <input
+                  value={draft}
+                  aria-label="Message text"
+                  autoComplete="off"
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    socketRef.current?.emit(event.target.value ? "typing:start" : "typing:stop", { peerId: activePeerId });
+                  }}
+                  placeholder="Write a message"
+                />
+                <button type="submit" title="Send" aria-label="Send message"><Send size={18} /></button>
+              </form>
+              <section className="history-tools">
+                <button type="button" onClick={exportActiveConversation}>Export history</button>
+                <input value={historyExport} aria-label="Exported history" readOnly placeholder="Exported base64 history" />
+                <input value={historyImport} onChange={(event) => setHistoryImport(event.target.value)} aria-label="Import history" placeholder="Paste base64 history to preview" />
+                <button type="button" onClick={importConversation}>Import</button>
+                {historyStatus && <span>{historyStatus}</span>}
+              </section>
+            </footer>
           </>
         ) : (
           <div className="empty-chat">

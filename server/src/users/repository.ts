@@ -51,6 +51,11 @@ export async function verifyUserPassword(db: DbPool, email: string, password: st
   return toPublicUser(user, true);
 }
 
+export async function getUserByEmail(db: DbPool, email: string, includeEmail = false) {
+  const result = await db.query<UserRow>("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+  return result.rows[0] ? toPublicUser(result.rows[0], includeEmail) : null;
+}
+
 export async function getUserById(db: DbPool, userId: number, includeEmail = false) {
   const result = await db.query<UserRow>("SELECT * FROM users WHERE id = $1", [userId]);
   return result.rows[0] ? toPublicUser(result.rows[0], includeEmail) : null;
@@ -90,4 +95,34 @@ export async function updateUserProfile(
     [userId, input.nickname, input.avatarUrl, input.bio, passwordHash]
   );
   return toPublicUser(result.rows[0], true);
+}
+
+export async function createPasswordResetToken(db: DbPool, userId: number, tokenHash: string, expiresAt: Date) {
+  await db.query(
+    `INSERT INTO password_reset_tokens(user_id, token_hash, expires_at)
+     VALUES($1, $2, $3)`,
+    [userId, tokenHash, expiresAt]
+  );
+}
+
+export async function updatePasswordWithResetToken(db: DbPool, tokenHash: string, password: string) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  const result = await db.query<UserRow>(
+    `WITH reset AS (
+       UPDATE password_reset_tokens
+       SET used_at = NOW()
+       WHERE token_hash = $1
+         AND used_at IS NULL
+         AND expires_at > NOW()
+       RETURNING user_id
+     )
+     UPDATE users
+     SET password_hash = $2,
+         updated_at = NOW()
+     FROM reset
+     WHERE users.id = reset.user_id
+     RETURNING users.*`,
+    [tokenHash, passwordHash]
+  );
+  return result.rows[0] ? toPublicUser(result.rows[0], true) : null;
 }

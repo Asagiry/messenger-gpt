@@ -43,6 +43,12 @@ export const api = {
   register(input: { email: string; nickname: string; password: string }) {
     return request<{ user: User; token: string }>("/auth/register", { method: "POST", body: JSON.stringify(input) }, null);
   },
+  requestPasswordRecovery(input: { email: string }) {
+    return request<{ ok: boolean; recoveryToken?: string }>("/auth/recovery/request", { method: "POST", body: JSON.stringify(input) }, null);
+  },
+  resetPassword(input: { token: string; password: string }) {
+    return request<{ ok: boolean }>("/auth/recovery/reset", { method: "POST", body: JSON.stringify(input) }, null);
+  },
   me() {
     return request<{ user: User }>("/me");
   },

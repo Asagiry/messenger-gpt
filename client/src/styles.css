@@ -103,7 +103,9 @@ textarea:focus-visible {
 }
 
 .auth-form,
-.profile-modal {
+.profile-modal,
+.recovery-panel,
+.recovery-panel form {
   display: grid;
   gap: 12px;
 }
@@ -131,7 +133,9 @@ textarea:focus {
 
 .auth-form button,
 .profile-modal > button,
-.composer button[type="submit"] {
+.composer button[type="submit"],
+.recovery-panel button,
+.history-tools button {
   min-height: 44px;
   border: 0;
   border-radius: var(--radius);
@@ -147,6 +151,27 @@ textarea:focus {
   color: var(--accent-strong);
   background: transparent;
   font-weight: 900;
+}
+
+.recovery-panel {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.recovery-panel p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.recovery-panel code {
+  display: block;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
 }
 
 .error {
@@ -506,15 +531,20 @@ textarea:focus {
   color: var(--accent-2);
 }
 
+.chat-bottom {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding: 12px 20px;
+  background: rgba(255, 253, 249, 0.94);
+  backdrop-filter: blur(12px);
+}
+
 .composer {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 48px;
   gap: 10px;
   align-items: center;
-  padding: 14px 20px;
-  border-top: 1px solid var(--line);
-  background: rgba(255, 253, 249, 0.94);
-  backdrop-filter: blur(12px);
 }
 
 .composer .edit-chip {
@@ -536,6 +566,31 @@ textarea:focus {
   border-radius: 999px;
   color: var(--muted);
   background: #ffffff;
+}
+
+.history-tools {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr) minmax(120px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.history-tools input {
+  min-width: 0;
+  padding-block: 10px;
+  font-size: 13px;
+}
+
+.history-tools button {
+  min-height: 38px;
+  padding: 9px 12px;
+  white-space: nowrap;
+}
+
+.history-tools span {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .empty-chat {
@@ -624,8 +679,12 @@ textarea:focus {
     max-width: 92%;
   }
 
-  .composer {
+  .chat-bottom {
     padding: 12px;
+  }
+
+  .history-tools {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -701,6 +760,9 @@ textarea:focus {
 
   .composer {
     grid-template-columns: minmax(0, 1fr) 46px;
+  }
+
+  .chat-bottom {
     padding: 10px;
   }
 }

@@ -44,6 +44,8 @@ PORT=80
 ENV
 
 npm ci
+mkdir -p server/public/uploads
+touch server.log
 npm run db:migrate
 npm run db:seed
 npm run build

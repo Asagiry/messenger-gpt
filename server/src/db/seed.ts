@@ -30,7 +30,7 @@ const seedMessages = [
 
 export async function seed() {
   await migrate();
-  await pool.query("TRUNCATE messages, users RESTART IDENTITY CASCADE");
+  await pool.query("TRUNCATE password_reset_tokens, messages, users RESTART IDENTITY CASCADE");
 
   const ids = new Map<string, number>();
   for (const [email, nickname, password, avatarUrl, bio] of seedUsers) {
