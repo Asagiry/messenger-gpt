@@ -65,5 +65,6 @@ sudo env \
   pm2 start npm --name gpt-messenger -- start
 
 sudo pm2 save
+sudo pm2 startup systemd -u root --hp /root >/dev/null
 sudo pm2 status gpt-messenger
 REMOTE

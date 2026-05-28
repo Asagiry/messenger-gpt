@@ -230,14 +230,14 @@ export default function App() {
       <main className="auth-screen">
         <section className="auth-panel">
           <div className="brand-mark"><MessageCircle size={28} /></div>
-          <h1>{authMode === "login" ? "Sign In" : "Create Account"}</h1>
-          <p>Demo: <strong>mira@example.com</strong> / <strong>123456</strong></p>
+          <h1>{authMode === "login" ? "Welcome back" : "Create account"}</h1>
+          <p>Demo account: <strong>mira@example.com</strong> / <strong>123456</strong></p>
           <form onSubmit={submitAuth} className="auth-form">
             <input name="email" type="email" aria-label="Email" autoComplete="email" spellCheck={false} placeholder="Email" required />
             {authMode === "register" && <input name="nickname" aria-label="Nickname" autoComplete="username" spellCheck={false} placeholder="Nickname" required minLength={3} />}
             <input name="password" type="password" aria-label="Password" autoComplete={authMode === "login" ? "current-password" : "new-password"} placeholder="Password" required minLength={authMode === "register" ? 6 : 1} />
             {authError && <div className="error">{authError}</div>}
-            <button type="submit" disabled={busy}>{busy ? "Please wait..." : authMode === "login" ? "Log In" : "Create Account"}</button>
+            <button type="submit" disabled={busy}>{busy ? "Please wait..." : authMode === "login" ? "Log in" : "Create account"}</button>
           </form>
           <button className="link-button" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
             {authMode === "login" ? "Create account" : "I already have an account"}
@@ -253,7 +253,7 @@ export default function App() {
         <header className="me-card">
           <Avatar user={me} />
           <div>
-            <strong>{me.nickname}</strong>
+            <strong>Messenger</strong>
             <span>{me.email}</span>
           </div>
           <button title="Profile settings" aria-label="Profile settings" onClick={() => setProfileOpen(true)}><Settings size={18} /></button>
