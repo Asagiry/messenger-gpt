@@ -66,5 +66,7 @@ sudo env \
 
 sudo pm2 save
 sudo pm2 startup systemd -u root --hp /root >/dev/null
+sudo systemctl enable pm2-root >/dev/null
+sudo systemctl start pm2-root
 sudo pm2 status gpt-messenger
 REMOTE
